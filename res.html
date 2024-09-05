@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Respons dengan Edit dan Hapus</title>
+</head>
+<body>
+    <h1>Formulir Respons</h1>
+    <form id="response-form">
+        <label for="name">Nama:</label>
+        <input type="text" id="name" required>
+        <br>
+        <label for="response">Respons:</label>
+        <textarea id="response" required></textarea>
+        <br>
+        <button type="submit">Kirim</button>
+    </form>
+
+    <h2>Respons yang Dikirim</h2>
+    <ul id="response-list"></ul>
+    <button id="delete-all-button">Hapus Semua</button>
+
+    <script>
+        const form = document.getElementById('response-form');
+        const responseList = document.getElementById('response-list');
+        const deleteAllButton = document.getElementById('delete-all-button');
+        let editingIndex = null; // Menyimpan indeks respons yang sedang diedit
+
+        // Fungsi untuk memuat respons dari Local Storage
+        function loadResponses() {
+            const responses = JSON.parse(localStorage.getItem('responses')) || [];
+            responseList.innerHTML = responses.map((res, index) => `
+                <li>
+                    <strong>${res.name}:</strong> ${res.response}
+                    <button onclick="editResponse(${index})">Edit</button>
+                    <button onclick="deleteResponse(${index})">Hapus</button>
+                </li>
+            `).join('');
+        }
+
+        // Fungsi untuk menyimpan respons baru ke Local Storage
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const response = document.getElementById('response').value;
+            const responses = JSON.parse(localStorage.getItem('responses')) || [];
+
+            if (editingIndex !== null) {
+                // Jika sedang dalam mode edit, perbarui respons yang ada
+                responses[editingIndex] = { name, response };
+                editingIndex = null; // Reset mode edit
+            } else {
+                // Jika tidak dalam mode edit, tambahkan respons baru
+                responses.push({ name, response });
+            }
+
+            localStorage.setItem('responses', JSON.stringify(responses));
+
+            // Muat ulang daftar respons
+            loadResponses();
+
+            // Kosongkan formulir
+            form.reset();
+        });
+
+        // Fungsi untuk menghapus respons dari Local Storage
+        function deleteResponse(index) {
+            const responses = JSON.parse(localStorage.getItem('responses')) || [];
+            responses.splice(index, 1);  // Hapus item pada indeks yang ditentukan
+            localStorage.setItem('responses', JSON.stringify(responses));
+
+            // Muat ulang daftar respons
+            loadResponses();
+        }
+
+        // Fungsi untuk menghapus semua respons dari Local Storage
+        function deleteAllResponses() {
+            localStorage.removeItem('responses'); // Hapus semua item dari Local Storage
+            loadResponses(); // Muat ulang daftar respons
+        }
+
+        // Fungsi untuk mengedit respons
+        function editResponse(index) {
+            const responses = JSON.parse(localStorage.getItem('responses')) || [];
+            const response = responses[index];
+
+            document.getElementById('name').value = response.name;
+            document.getElementById('response').value = response.response;
+            editingIndex = index; // Set indeks untuk edit
+
+            window.scrollTo(0, 0); // Gulir ke atas formulir jika perlu
+        }
+
+        // Tangani klik tombol Hapus Semua
+        deleteAllButton.addEventListener('click', deleteAllResponses);
+
+        // Muat respons saat halaman dimuat
+        loadResponses();
+    </script>
+</body>
+</html>
